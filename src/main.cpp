@@ -108,7 +108,9 @@ int main(int argc, char **argv) {
   // host level scan
   {
   TYPE *sum = (TYPE *)malloc(SumSize);
+  assert(sum);
   TYPE *res = (TYPE *)malloc(SumSize);
+  assert(res);
   clw.memcpy_from_dev(d_sum, SumSize, sum);
   res[0] = IDENTITY;
   for (unsigned i=1; i<ngroups; ++i) {
