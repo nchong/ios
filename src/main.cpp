@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
   {
     unsigned error = 0;
     clw.memcpy_to_dev(d_error, sizeof(unsigned), &error);
-    cl_kernel k = clw.create_kernel(meta, is_exclusive ?  "check_abstract_exclusive" : "check_abstract_inclusive", "-I.");
+    cl_kernel k = clw.create_kernel(meta, is_exclusive ?  "check_abstract_exclusive" : "check_abstract_inclusive");
     clw.kernel_arg(k, d_out, d_error);
     cl_uint dim = 1;
     size_t global_work_size = nelements;
