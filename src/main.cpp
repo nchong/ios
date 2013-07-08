@@ -61,7 +61,6 @@ int main(int argc, char **argv) {
 
   // test data
   size_t ArraySize = nelements * sizeof(TYPE);
-  TYPE *out = (TYPE *)malloc(ArraySize);
 
   // initialise for device 0 on platform 0, with profiling off
   // this creates a context and command queue
@@ -71,6 +70,7 @@ int main(int argc, char **argv) {
   CLWrapper clw(platform, device, profiling);
 
   // compile the OpenCL code
+  cl_program meta = clw.compile("meta.cl", "-I.");
   const char *filename = kernel.c_str();
   std::ostringstream oss;
   oss << "-I. -DNO_INVARIANTS -DABSTRACT -DN=" << N;
@@ -82,11 +82,11 @@ int main(int argc, char **argv) {
   // create some memory objects on the device
   cl_mem d_in   = clw.dev_malloc(ArraySize);
   cl_mem d_out  = clw.dev_malloc(ArraySize);
+  cl_mem d_error  = clw.dev_malloc(sizeof(unsigned));
 
   // initialise input
   {
-  cl_program program = clw.compile("meta.cl", "-I.");
-  cl_kernel k = clw.create_kernel(program, "init_abstract");
+  cl_kernel k = clw.create_kernel(meta, "init_abstract");
   clw.kernel_arg(k, d_in);
   cl_uint dim = 1;
   size_t global_work_size = nelements;
@@ -101,34 +101,38 @@ int main(int argc, char **argv) {
   cl_uint dim = 1;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
 
+#ifdef PRINT_RESULTS
+  TYPE *out = (TYPE *)malloc(ArraySize);
+
   // memcpy back the result
   clw.memcpy_from_dev(d_out, ArraySize, out);
 
-#ifdef PRINT_RESULTS
   // print results
   for (unsigned i=0; i<N; ++i) {
     printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
   }
+
+  free(out);
 #endif
 
   // check results
-  if (is_exclusive) {
-    assert(out[0] == IDENTITY);
-    for (unsigned i=1; i<nelements; ++i) {
-      assert(GET_LOWER(out[i]) == 0);
-      assert(GET_UPPER(out[i]) == i);
+  {
+    unsigned error = 0;
+    clw.memcpy_to_dev(d_error, sizeof(unsigned), &error);
+    cl_kernel k = clw.create_kernel(meta, is_exclusive ?  "check_abstract_exclusive" : "check_abstract_inclusive", "-I.");
+    clw.kernel_arg(k, d_out, d_error);
+    cl_uint dim = 1;
+    size_t global_work_size = nelements;
+    size_t local_work_size = N;
+    clw.run_kernel(k, dim, &global_work_size, &local_work_size);
+    clw.memcpy_from_dev(d_error, sizeof(unsigned), &error);
+    if (error == 0) {
+      printf("TEST PASSED (%s)\n", is_exclusive ? "EXCL" : "INCL");
+    } else {
+      printf("TEST FAILED\n");
     }
-    printf("TEST PASSED (EXCLUSIVE)\n");
-  } else /* inclusive */ {
-    for (unsigned i=0; i<nelements; ++i) {
-      assert(GET_LOWER(out[i]) == 0);
-      assert(GET_UPPER(out[i]) == i+1);
-    }
-    printf("TEST PASSED (INCLUSIVE)\n");
   }
 
-  // cleanup
-  free(out);
   // device objects will be auto-deleted when clw is destructed
   return 0;
 }
