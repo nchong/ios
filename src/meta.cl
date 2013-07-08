@@ -20,6 +20,7 @@ __kernel void meta1(__global TYPE *input, __global TYPE *output, __global TYPE *
   unsigned tid = get_local_id(0);
   unsigned bid = get_group_id(0);
   prefixsum(input, output);
+  barrier(CLK_LOCAL_MEM_FENCE|CLK_GLOBAL_MEM_FENCE);
   if (tid == 0) {
     sum[bid] = output[(bid+1)*N-1];
   }
