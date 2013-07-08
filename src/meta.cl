@@ -1,3 +1,4 @@
+#define ABSTRACT
 #include "abstraction.h"
 
 __kernel void init_abstract(__global TYPE *input) {

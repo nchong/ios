@@ -12,37 +12,40 @@
 int main(int argc, char **argv) {
 
   // command line arguments
-  if (argc != 3) {
-    printf("Usage: %s N <kernel.cl>\n", argv[0]);
+  if (argc != 4) {
+    printf("Usage: %s nelements-per-group ngroups <kernel.cl>\n", argv[0]);
     return 1;
   }
 
-  // number of elements
+  // number of elements per group
   unsigned N = atoi(argv[1]);
   if ((N & (N-1)) != 0) {
     printf("Error: N must be a power of two\n");
     return 1;
   }
 
+  // number of groups
+  unsigned ngroups = atoi(argv[2]);
+
   // kernel specific parameters
   size_t global_work_size;
   size_t local_work_size;
   bool is_exclusive;
-  std::string kernel = std::string(argv[2]);
+  std::string kernel = std::string(argv[3]);
   if (kernel == "sklansky.cl") {
-    global_work_size = N/2;
+    global_work_size = (N/2)*ngroups;
     local_work_size  = N/2;
     is_exclusive = false;
   } else if (kernel == "koggestone.cl") {
-    global_work_size = N;
+    global_work_size = N*ngroups;
     local_work_size  = N;
     is_exclusive = false;
   } else if (kernel == "brentkung.cl") {
-    global_work_size = N;
+    global_work_size = N*ngroups;
     local_work_size  = N;
     is_exclusive = false;
   } else if (kernel == "blelloch.cl") {
-    global_work_size = N;
+    global_work_size = N*ngroups;
     local_work_size  = N;
     is_exclusive = true;
   } else {
@@ -54,8 +57,7 @@ int main(int argc, char **argv) {
   std::cout << clinfo();
 
   // test data
-  size_t ArraySize = N * sizeof(TYPE);
-  TYPE *in  = (TYPE *)malloc(ArraySize);
+  size_t ArraySize = ngroups * N * sizeof(TYPE);
   TYPE *out = (TYPE *)malloc(ArraySize);
 
   // initialise for device 0 on platform 0, with profiling off
@@ -75,11 +77,19 @@ int main(int argc, char **argv) {
   cl_kernel k = clw.create_kernel(program, "prefixsum");
 
   // create some memory objects on the device
-  cl_mem d_in   = clw.dev_malloc(ArraySize, CL_MEM_READ_ONLY);
+  cl_mem d_in   = clw.dev_malloc(ArraySize);
   cl_mem d_out  = clw.dev_malloc(ArraySize);
 
-  // memcpy into these objects
-  clw.memcpy_to_dev(d_in, ArraySize, in);
+  // initialise input
+  {
+  cl_program program = clw.compile("meta.cl", "-I.");
+  cl_kernel k = clw.create_kernel(program, "init_abstract");
+  clw.kernel_arg(k, d_in);
+  cl_uint dim = 1;
+  size_t global_work_size = N * ngroups;
+  size_t local_work_size = N;
+  clw.run_kernel(k, dim, &global_work_size, &local_work_size);
+  }
 
   // set kernel arguments
   clw.kernel_arg(k, d_in, d_out);
@@ -115,7 +125,6 @@ int main(int argc, char **argv) {
   }
 
   // cleanup
-  free(in);
   free(out);
   // device objects will be auto-deleted when clw is destructed
   return 0;
