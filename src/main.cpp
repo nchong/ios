@@ -90,10 +90,12 @@ int main(int argc, char **argv) {
   // memcpy back the result
   clw.memcpy_from_dev(d_out, ArraySize, out);
 
+#ifdef PRINT_RESULTS
   // print results
   for (unsigned i=0; i<N; i++) {
     printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
   }
+#endif
 
   // check results
   if (is_exclusive) {
