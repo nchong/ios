@@ -36,20 +36,20 @@ int main(int argc, char **argv) {
   bool is_exclusive;
   std::string kernel = std::string(argv[3]);
   if (kernel == "sklansky.cl") {
-    global_work_size = (N/2)*ngroups;
+    global_work_size = nelements/2;
     local_work_size  = N/2;
     is_exclusive = false;
   } else if (kernel == "koggestone.cl") {
-    global_work_size = N*ngroups;
+    global_work_size = nelements;
     local_work_size  = N;
     is_exclusive = false;
   } else if (kernel == "brentkung.cl") {
-    global_work_size = N*ngroups;
-    local_work_size  = N;
+    global_work_size = nelements/2;
+    local_work_size  = N/2;
     is_exclusive = false;
   } else if (kernel == "blelloch.cl") {
-    global_work_size = N*ngroups;
-    local_work_size  = N;
+    global_work_size = nelements/2;
+    local_work_size  = N/2;
     is_exclusive = true;
   } else {
     printf("Error: unrecognised kernel [%s]\n", kernel.c_str());
