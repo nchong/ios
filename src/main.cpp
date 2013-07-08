@@ -1,3 +1,4 @@
+#define ABSTRACT
 #include "clwrapper.h"
 #include "abstraction.h"
 
@@ -6,10 +7,47 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <map>
 
 int main(int argc, char **argv) {
-  unsigned N = std::stoi(argv[1]);
-  printf("N = %d", N);
+
+  // command line arguments
+  if (argc != 3) {
+    printf("Usage: %s N <kernel.cl>\n", argv[0]);
+    return 1;
+  }
+
+  unsigned N = atoi(argv[1]);
+  if ((N & (N-1)) != 0) {
+    printf("Error: N must be a power of two\n");
+    return 1;
+  }
+
+  // kernel specific parameters
+  size_t global_work_size;
+  size_t local_work_size;
+  bool is_exclusive;
+  std::string kernel = std::string(argv[2]);
+  if (kernel == "sklansky.cl") {
+    global_work_size = N/2;
+    local_work_size  = N/2;
+    is_exclusive = false;
+  } else if (kernel == "koggestone.cl") {
+    global_work_size = N;
+    local_work_size  = N;
+    is_exclusive = false;
+  } else if (kernel == "brentkung.cl") {
+    global_work_size = N;
+    local_work_size  = N;
+    is_exclusive = false;
+  } else if (kernel == "blelloch.cl") {
+    global_work_size = N;
+    local_work_size  = N;
+    is_exclusive = true;
+  } else {
+    printf("Error: unrecognised kernel [%s]\n", kernel.c_str());
+    return 1;
+  }
 
   // platform info
   std::cout << clinfo();
@@ -27,7 +65,7 @@ int main(int argc, char **argv) {
   CLWrapper clw(platform, device, profiling);
 
   // compile the OpenCL code
-  const char *filename = "blelloch.cl";
+  const char *filename = kernel.c_str();
   std::ostringstream oss;
   oss << "-I. -DNO_INVARIANTS -DABSTRACT -DN=" << N;
   cl_program program = clw.compile(filename, oss.str().c_str());
@@ -47,8 +85,6 @@ int main(int argc, char **argv) {
 
   // run the kernel
   cl_uint dim = 1;
-  size_t global_work_size = N;
-  size_t local_work_size  = N;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
 
   // memcpy back the result
@@ -60,15 +96,18 @@ int main(int argc, char **argv) {
   }
 
   // check results
-  assert(out[0] == IDENTITY);
-  for (unsigned i=1; i<N; i++) {
-    assert(GET_LOWER(out[i]) == 0);
-    assert(GET_UPPER(out[i]) == i);
+  if (is_exclusive) {
+    assert(out[0] == IDENTITY);
+    for (unsigned i=1; i<N; i++) {
+      assert(GET_LOWER(out[i]) == 0);
+      assert(GET_UPPER(out[i]) == i);
+    }
+  } else /* inclusive */ {
+    for (unsigned i=0; i<N; i++) {
+      assert(GET_LOWER(out[i]) == 0);
+      assert(GET_UPPER(out[i]) == i+1);
+    }
   }
-//for (unsigned i=0; i<N; i++) {
-//  assert(GET_LOWER(out[i]) == 0);
-//  assert(GET_UPPER(out[i]) == i+1);
-//}
   printf("TEST PASSED\n");
 
   // cleanup
