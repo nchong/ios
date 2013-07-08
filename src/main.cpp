@@ -110,8 +110,11 @@ int main(int argc, char **argv) {
   TYPE *sum = (TYPE *)malloc(SumSize);
   TYPE *res = (TYPE *)malloc(SumSize);
   clw.memcpy_from_dev(d_sum, SumSize, sum);
+  for (unsigned i=0; i<ngroups; ++i) {
+    printf("sum[%d] = (%d,%d)\n", i, GET_LOWER(sum[i]), GET_UPPER(sum[i]));
+  }
   res[0] = IDENTITY;
-  for (unsigned i=1; i<N; ++i) {
+  for (unsigned i=1; i<ngroups; ++i) {
     res[i] = OPERATOR(res[0], sum[i-1]);
     printf("res[%d] = (%d,%d)\n", i, GET_LOWER(res[i]), GET_UPPER(res[i]));
   }
