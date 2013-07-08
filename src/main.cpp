@@ -74,13 +74,11 @@ int main(int argc, char **argv) {
   oss << "-I. -DNO_INVARIANTS -DN=" << N << " -DINNER=" << kernel;
   cl_program meta = clw.compile("meta.cl", oss.str().c_str());
 
-  // get kernel handle
-  cl_kernel k = clw.create_kernel(meta, "meta1");
-
   // create some memory objects on the device
-  cl_mem d_in   = clw.dev_malloc(ArraySize);
-  cl_mem d_out  = clw.dev_malloc(ArraySize);
-  cl_mem d_error  = clw.dev_malloc(sizeof(unsigned));
+  cl_mem d_in    = clw.dev_malloc(ArraySize);
+  cl_mem d_out   = clw.dev_malloc(ArraySize);
+  cl_mem d_sum   = clw.dev_malloc(ngroups*sizeof(unsigned));
+  cl_mem d_error = clw.dev_malloc(sizeof(unsigned));
 
   // initialise input
   {
@@ -92,12 +90,13 @@ int main(int argc, char **argv) {
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
   }
 
-  // set kernel arguments
-  clw.kernel_arg(k, d_in, d_out);
-
-  // run the kernel
+  // block level scan
+  {
+  cl_kernel k = clw.create_kernel(meta, "meta1");
+  clw.kernel_arg(k, d_in, d_out, d_sum);
   cl_uint dim = 1;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
+  }
 
 #ifdef PRINT_RESULTS
   TYPE *out = (TYPE *)malloc(ArraySize);
