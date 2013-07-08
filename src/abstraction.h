@@ -17,7 +17,7 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 #define TOP MAKE_PAIR(2, 0)
 
 #define TYPE unsigned
-#define OPERATOR(X, Y) (X == IDENTITY ? Y : (Y ==  IDENTITY ? X : (X == TOP | Y == TOP | GET_UPPER(X) != GET_LOWER(Y) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
+#define OPERATOR(X, Y) ((X == IDENTITY) ? Y : ((Y ==  IDENTITY) ? X : ((X == TOP) | (Y == TOP) | (GET_UPPER(X) != GET_LOWER(Y)) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
 
 #else
 
