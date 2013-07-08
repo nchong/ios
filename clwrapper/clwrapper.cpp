@@ -455,6 +455,7 @@ string clinfo() {
   cl_uint clk_freq;
   cl_long global_mem_size;
   cl_ulong local_mem_size;
+  cl_ulong max_group_size;
   for (int i=0; i<(int)num_platforms; i++) {
     ASSERT_NO_CL_ERROR(
       clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, sizeof(platform_name), platform_name, /*param_value_size_ret=*/NULL));
@@ -481,6 +482,8 @@ string clinfo() {
           clGetDeviceInfo(devices[j], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(global_mem_size), &global_mem_size, /*param_value_size_ret=*/NULL));
       ASSERT_NO_CL_ERROR(
           clGetDeviceInfo(devices[j], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(local_mem_size), &local_mem_size, /*param_value_size_ret=*/NULL));
+      ASSERT_NO_CL_ERROR(
+          clGetDeviceInfo(devices[j], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_group_size), &max_group_size, /*param_value_size_ret=*/NULL));
 
       ss << "# Device " << j << "\n";
       ss << "# \tName: " << device_name << "\n";
@@ -489,6 +492,7 @@ string clinfo() {
       ss << "# \tClock frequency: " << clk_freq << " MHz\n";
       ss << "# \tGlobal memory: " << (global_mem_size>>30) << "GB\n";
       ss << "# \tLocal memory: " <<  (local_mem_size>>10) << "KB\n";
+      ss << "# \tMax group size: " <<  max_group_size << "\n";
     }
     delete[] devices;
   }
