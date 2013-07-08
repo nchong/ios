@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
   clw.memcpy_from_dev(d_out, ArraySize, out);
 
   // print results
-  for (unsigned i=0; i<N; ++i) {
+  for (unsigned i=0; i<nelements; ++i) {
     printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
   }
 
