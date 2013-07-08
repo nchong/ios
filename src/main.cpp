@@ -70,14 +70,12 @@ int main(int argc, char **argv) {
   CLWrapper clw(platform, device, profiling);
 
   // compile the OpenCL code
-  cl_program meta = clw.compile("meta.cl", "-I.");
-  const char *filename = kernel.c_str();
   std::ostringstream oss;
-  oss << "-I. -DNO_INVARIANTS -DABSTRACT -DN=" << N;
-  cl_program program = clw.compile(filename, oss.str().c_str());
+  oss << "-I. -DNO_INVARIANTS -DN=" << N << " -DINNER=" << kernel;
+  cl_program meta = clw.compile("meta.cl", oss.str().c_str());
 
   // get kernel handle
-  cl_kernel k = clw.create_kernel(program, "prefixsum");
+  cl_kernel k = clw.create_kernel(meta, "meta1");
 
   // create some memory objects on the device
   cl_mem d_in   = clw.dev_malloc(ArraySize);

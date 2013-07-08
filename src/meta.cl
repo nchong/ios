@@ -1,6 +1,8 @@
 #define ABSTRACT
 #include "abstraction.h"
-#include "koggestone.cl"
+#define __stringify_inner(x) #x
+#define __stringify(x) __stringify_inner(x)
+#include __stringify(INNER)
 
 __kernel void init_abstract(__global TYPE *input) {
   unsigned i = get_global_id(0);  
