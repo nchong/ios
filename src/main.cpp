@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
   }
   res[0] = IDENTITY;
   for (unsigned i=1; i<ngroups; ++i) {
-    res[i] = OPERATOR(res[0], sum[i-1]);
+    res[i] = OPERATOR(res[i-1], sum[i-1]);
     printf("res[%d] = (%d,%d)\n", i, GET_LOWER(res[i]), GET_UPPER(res[i]));
   }
   clw.memcpy_to_dev(d_sum, SumSize, res);
