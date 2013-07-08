@@ -6,9 +6,9 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 
 #elif defined(ABSTRACT)
 
-#define MAKE_PAIR(lower, upper) make_uint2(lower,upper)
-#define GET_UPPER(X) X.hi
-#define GET_LOWER(X) X.lo
+#define MAKE_PAIR(lower, upper) (((lower) << 16) | (upper))
+#define GET_UPPER(X) ((X) & (0x0000ffff))
+#define GET_LOWER(X) (((X) >> 16) & (0x0000ffff))
 
 // Identity is identified by bad interval (1, 0)
 #define IDENTITY MAKE_PAIR(1, 0)
@@ -16,7 +16,7 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 // Top is identified by bad interval (2, 0)
 #define TOP MAKE_PAIR(2, 0)
 
-#define TYPE uint2
+#define TYPE unsigned
 #define OPERATOR(X, Y) ((X == IDENTITY) ? Y : ((Y ==  IDENTITY) ? X : ((X == TOP) | (Y == TOP) | (GET_UPPER(X) != GET_LOWER(Y)) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
 
 #else
