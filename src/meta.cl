@@ -1,5 +1,6 @@
 #define ABSTRACT
 #include "abstraction.h"
+#include "koggestone.cl"
 
 __kernel void init_abstract(__global TYPE *input) {
   unsigned i = get_global_id(0);  
@@ -11,6 +12,11 @@ __kernel void check_abstract_inclusive(__global TYPE *output, __global unsigned 
   if (output[i] != MAKE_PAIR(0, i+1)) {
     *error = 1;
   }
+}
+
+__kernel void meta1(__global TYPE *input, __global TYPE *output, __global TYPE *sum) {
+  unsigned bid = get_group_id(0);
+  prefixsum(input, output);
 }
 
 __kernel void check_abstract_exclusive(__global TYPE *output, __global unsigned *error) {
