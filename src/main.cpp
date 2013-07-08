@@ -31,25 +31,16 @@ int main(int argc, char **argv) {
   unsigned nelements = N * ngroups;
 
   // kernel specific parameters
-  size_t global_work_size;
-  size_t local_work_size;
-  bool is_exclusive;
+  bool is_exclusive = false;
   std::string kernel = std::string(argv[3]);
   if (kernel == "sklansky.cl") {
-    global_work_size = nelements/2;
-    local_work_size  = N/2;
     is_exclusive = false;
   } else if (kernel == "koggestone.cl") {
-    global_work_size = nelements;
-    local_work_size  = N;
     is_exclusive = false;
   } else if (kernel == "brentkung.cl") {
-    global_work_size = nelements/2;
-    local_work_size  = N/2;
     is_exclusive = false;
-  } else if (kernel == "blelloch.cl") {
-    global_work_size = nelements/2;
-    local_work_size  = N/2;
+  } else 
+  if (kernel == "blelloch.cl") {
     is_exclusive = true;
   } else {
     printf("Error: unrecognised kernel [%s]\n", kernel.c_str());
@@ -58,9 +49,6 @@ int main(int argc, char **argv) {
 
   // platform info
   std::cout << clinfo();
-
-  // test data
-  size_t ArraySize = nelements * sizeof(TYPE);
 
   // initialise for device 0 on platform 0, with profiling off
   // this creates a context and command queue
@@ -75,9 +63,11 @@ int main(int argc, char **argv) {
   cl_program meta = clw.compile("meta.cl", oss.str().c_str());
 
   // create some memory objects on the device
+  size_t ArraySize = nelements * sizeof(TYPE);
+  size_t SumSize   = ngroups   * sizeof(TYPE);
   cl_mem d_in    = clw.dev_malloc(ArraySize);
   cl_mem d_out   = clw.dev_malloc(ArraySize);
-  cl_mem d_sum   = clw.dev_malloc(ngroups*sizeof(unsigned));
+  cl_mem d_sum   = clw.dev_malloc(SumSize);
   cl_mem d_error = clw.dev_malloc(sizeof(unsigned));
 
   // initialise input
@@ -92,23 +82,62 @@ int main(int argc, char **argv) {
 
   // block level scan
   {
+  size_t global_work_size;
+  size_t local_work_size;
+  if (kernel == "sklansky.cl") {
+    global_work_size = nelements/2;
+    local_work_size  = N/2;
+  } else if (kernel == "koggestone.cl") {
+    global_work_size = nelements;
+    local_work_size  = N;
+  } else if (kernel == "brentkung.cl") {
+    global_work_size = nelements/2;
+    local_work_size  = N/2;
+  } else if (kernel == "blelloch.cl") {
+    global_work_size = nelements/2;
+    local_work_size  = N/2;
+  } else {
+    assert(0);
+  }
   cl_kernel k = clw.create_kernel(meta, "meta1");
   clw.kernel_arg(k, d_in, d_out, d_sum);
   cl_uint dim = 1;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
   }
 
+  // host level scan
+  {
+  TYPE *sum = (TYPE *)malloc(SumSize);
+  TYPE *res = (TYPE *)malloc(SumSize);
+  clw.memcpy_from_dev(d_sum, SumSize, sum);
+  res[0] = IDENTITY;
+  for (unsigned i=1; i<N; ++i) {
+    res[i] = OPERATOR(res[0], sum[i-1]);
+    printf("res[%d] = (%d,%d)\n", i, GET_LOWER(res[i]), GET_UPPER(res[i]));
+  }
+  clw.memcpy_to_dev(d_sum, SumSize, res);
+  free(sum);
+  free(res);
+  }
+
+  // final increment
+  {
+  size_t global_work_size;
+  size_t local_work_size;
+  global_work_size = nelements;
+  local_work_size  = N;
+  cl_kernel k = clw.create_kernel(meta, "meta2");
+  clw.kernel_arg(k, d_out, d_sum);
+  cl_uint dim = 1;
+  clw.run_kernel(k, dim, &global_work_size, &local_work_size);
+  }
+
 #ifdef PRINT_RESULTS
   TYPE *out = (TYPE *)malloc(ArraySize);
-
-  // memcpy back the result
   clw.memcpy_from_dev(d_out, ArraySize, out);
-
-  // print results
   for (unsigned i=0; i<nelements; ++i) {
     printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
   }
-
   free(out);
 #endif
 

@@ -17,8 +17,18 @@ __kernel void check_abstract_inclusive(__global TYPE *output, __global unsigned 
 }
 
 __kernel void meta1(__global TYPE *input, __global TYPE *output, __global TYPE *sum) {
+  unsigned tid = get_local_id(0);
   unsigned bid = get_group_id(0);
   prefixsum(input, output);
+  if (tid == 0) {
+    sum[bid] = output[(bid+1)*N-1];
+  }
+}
+
+__kernel void meta2(__global TYPE *output, __global TYPE *sum) {
+  unsigned bid = get_group_id(0);
+  unsigned gid = get_global_id(0);
+  output[gid] = OPERATOR(sum[bid], output[gid]);
 }
 
 __kernel void check_abstract_exclusive(__global TYPE *output, __global unsigned *error) {
