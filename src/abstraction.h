@@ -6,9 +6,9 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 
 #elif defined(ABSTRACT)
 
-#define MAKE_PAIR(lower, upper) (((lower) << 32) | (upper))
-#define GET_UPPER(X) ((X) & (0xffffffff))
-#define GET_LOWER(X) (((X) >> 32) & (0xffffffff))
+#define MAKE_PAIR(lower, upper) (((lower) << 28) | (upper))
+#define GET_UPPER(X) ((X) & (0x0fffffff))
+#define GET_LOWER(X) (((X) >> 28) & (0x0fffffff))
 
 // Identity is identified by bad interval (1, 0)
 #define IDENTITY MAKE_PAIR(1, 0)
