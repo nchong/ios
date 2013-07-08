@@ -17,7 +17,8 @@ __kernel void check_abstract_exclusive(__global TYPE *output, __global unsigned 
   unsigned i = get_global_id(0);
   if ((i == 0) && (output[i] != IDENTITY)) {
     *error = 1;
-  } else if (output[i] != MAKE_PAIR(0, i)) {
+  }
+  if ((i > 0) && (output[i] != MAKE_PAIR(0, i))) {
     *error = 1;
   }
 }
