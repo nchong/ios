@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
   // number of groups
   unsigned ngroups = atoi(argv[2]);
 
+  // total number of elements
+  unsigned nelements = N * ngroups;
+
   // kernel specific parameters
   size_t global_work_size;
   size_t local_work_size;
@@ -57,7 +60,7 @@ int main(int argc, char **argv) {
   std::cout << clinfo();
 
   // test data
-  size_t ArraySize = ngroups * N * sizeof(TYPE);
+  size_t ArraySize = nelements * sizeof(TYPE);
   TYPE *out = (TYPE *)malloc(ArraySize);
 
   // initialise for device 0 on platform 0, with profiling off
@@ -86,7 +89,7 @@ int main(int argc, char **argv) {
   cl_kernel k = clw.create_kernel(program, "init_abstract");
   clw.kernel_arg(k, d_in);
   cl_uint dim = 1;
-  size_t global_work_size = N * ngroups;
+  size_t global_work_size = nelements;
   size_t local_work_size = N;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
   }
@@ -103,7 +106,7 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT_RESULTS
   // print results
-  for (unsigned i=0; i<N; i++) {
+  for (unsigned i=0; i<N; ++i) {
     printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
   }
 #endif
@@ -111,13 +114,13 @@ int main(int argc, char **argv) {
   // check results
   if (is_exclusive) {
     assert(out[0] == IDENTITY);
-    for (unsigned i=1; i<N; i++) {
+    for (unsigned i=1; i<nelements; ++i) {
       assert(GET_LOWER(out[i]) == 0);
       assert(GET_UPPER(out[i]) == i);
     }
     printf("TEST PASSED (EXCLUSIVE)\n");
   } else /* inclusive */ {
-    for (unsigned i=0; i<N; i++) {
+    for (unsigned i=0; i<nelements; ++i) {
       assert(GET_LOWER(out[i]) == 0);
       assert(GET_UPPER(out[i]) == i+1);
     }
