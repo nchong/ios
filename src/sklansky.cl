@@ -4,13 +4,13 @@
 #include "abstraction.h"
 
 __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
-
   __local TYPE result[N];
 
   unsigned tid = get_local_id(0);
+  unsigned gid = get_global_id(0);
   
-  result[2*tid] = READ_INITIAL(input, 2*tid);
-  result[2*tid+1] = READ_INITIAL(input, 2*tid+1);
+  result[2*tid] = input[2*gid];
+  result[2*tid+1] = input[2*gid+1];
   
   for (unsigned d = 1;
 #ifndef NO_INVARIANTS
@@ -26,8 +26,8 @@ __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
   
   barrier(CLK_LOCAL_MEM_FENCE);
 
-  output[2*tid] = result[2*tid];
-  output[2*tid+1] = result[2*tid+1];
+  output[2*gid] = result[2*tid];
+  output[2*gid+1] = result[2*tid+1];
 
 #ifdef FORCE_FAIL
   __assert(false);

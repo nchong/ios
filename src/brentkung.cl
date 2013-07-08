@@ -8,10 +8,11 @@ __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
 
   unsigned offset;
   unsigned tid = get_local_id(0);
+  unsigned gid = get_global_id(0);
 
   if (tid < N/2) {
-    result[2*tid] = READ_INITIAL(input, 2*tid);
-    result[2*tid+1] = READ_INITIAL(input, 2*tid+1);
+    result[2*tid] = input[2*gid];
+    result[2*tid+1] = input[2*gid+1];
   }
 
   offset = 1;
@@ -56,8 +57,8 @@ __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
   }
 
   if (tid < N/2) {
-    output[2*tid] = result[2*tid];
-    output[2*tid+1] = result[2*tid+1];
+    output[2*gid] = result[2*tid];
+    output[2*gid+1] = result[2*tid+1];
   }
 
 #ifdef FORCE_FAIL

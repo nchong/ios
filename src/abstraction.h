@@ -2,9 +2,7 @@
 
 DECLARE_UF_BINARY(CIRC, int, int, int);
 #define TYPE int
-#define READ_INITIAL(A, x) A[x]
 #define OPERATOR(X, Y) CIRC(X, Y)
-#define ASSIGN(X, Y) X = Y
 
 #elif defined(ABSTRACT)
 
@@ -19,7 +17,6 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 #define TOP MAKE_PAIR(2, 0)
 
 #define TYPE unsigned
-#define READ_INITIAL(A, x) MAKE_PAIR(x, x+1)
 #define OPERATOR(X, Y) (X == IDENTITY ? Y : (Y ==  IDENTITY ? X : (X == TOP | Y == TOP | GET_UPPER(X) != GET_LOWER(Y) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
 
 #else

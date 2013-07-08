@@ -8,7 +8,8 @@ __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
 
   TYPE temp;
   unsigned tid = get_local_id(0);
-  result[tid] = READ_INITIAL(input, tid);
+  unsigned gid = get_global_id(0);
+  result[tid] = input[gid];
 
   barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -38,7 +39,7 @@ __kernel void prefixsum(__global TYPE *input, __global TYPE *output) {
     barrier(CLK_LOCAL_MEM_FENCE);
   }
 
-  output[tid] = result[tid];
+  output[gid] = result[tid];
 
 #ifdef FORCE_FAIL
   __assert(false);
