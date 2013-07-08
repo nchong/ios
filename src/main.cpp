@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  // number of elements
   unsigned N = atoi(argv[1]);
   if ((N & (N-1)) != 0) {
     printf("Error: N must be a power of two\n");
@@ -104,13 +105,14 @@ int main(int argc, char **argv) {
       assert(GET_LOWER(out[i]) == 0);
       assert(GET_UPPER(out[i]) == i);
     }
+    printf("TEST PASSED (EXCLUSIVE)\n");
   } else /* inclusive */ {
     for (unsigned i=0; i<N; i++) {
       assert(GET_LOWER(out[i]) == 0);
       assert(GET_UPPER(out[i]) == i+1);
     }
+    printf("TEST PASSED (INCLUSIVE)\n");
   }
-  printf("TEST PASSED\n");
 
   // cleanup
   free(in);
