@@ -5,9 +5,21 @@
 #include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <map>
+
+#ifdef PRINT_RESULTS
+void print_array(TYPE *xs, const char *name, unsigned len) {
+  for (unsigned i=0; i<len; ++i) {
+    std::cout << name << "[" << i << "] = (" 
+              << GET_LOWER(xs[i]) << ", " << GET_UPPER(xs[i]) << ")"
+              << " [ " << hex << xs[i] << dec << "]"
+              << std::endl;
+  }
+}
+#endif
 
 int main(int argc, char **argv) {
 
@@ -80,6 +92,14 @@ int main(int argc, char **argv) {
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
   }
 
+#ifdef PRINT_RESULTS
+  TYPE *in = (TYPE *)malloc(ArraySize);
+  assert(in);
+  clw.memcpy_from_dev(d_in, ArraySize, in);
+  print_array(in, "in", nelements);
+  free(in);
+#endif
+
   // block level scan
   {
   size_t global_work_size;
@@ -117,12 +137,12 @@ int main(int argc, char **argv) {
     res[i] = OPERATOR(res[i-1], sum[i-1]);
   }
 #ifdef PRINT_RESULTS
-  for (unsigned i=0; i<ngroups; ++i) {
-    printf("sum[%d] = (%d,%d)\n", i, GET_LOWER(sum[i]), GET_UPPER(sum[i]));
-  }
-  for (unsigned i=0; i<ngroups; ++i) {
-    printf("res[%d] = (%d,%d)\n", i, GET_LOWER(res[i]), GET_UPPER(res[i]));
-  }
+  TYPE *out = (TYPE *)malloc(ArraySize);
+  clw.memcpy_from_dev(d_out, ArraySize, out);
+  print_array(out, "out", nelements);
+  free(out);
+  print_array(sum, "sum", ngroups);
+  print_array(res, "res", ngroups);
 #endif
   clw.memcpy_to_dev(d_sum, SumSize, res);
   free(sum);
@@ -144,9 +164,7 @@ int main(int argc, char **argv) {
 #ifdef PRINT_RESULTS
   TYPE *out = (TYPE *)malloc(ArraySize);
   clw.memcpy_from_dev(d_out, ArraySize, out);
-  for (unsigned i=0; i<nelements; ++i) {
-    printf("out[%d] = (%d,%d)\n", i, GET_LOWER(out[i]), GET_UPPER(out[i]));
-  }
+  print_array(out, "out", nelements);
   free(out);
 #endif
 
