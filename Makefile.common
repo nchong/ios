@@ -29,8 +29,8 @@ endif
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(OPENCL_INC) $(INCLUDE) -c -o $@ $<
 
-$(PROG): $(CLWRAPPER) main.o
-	$(CXX) $(OPENCL_LIB) $(OPENCL_INC) $^ -o $@
+$(PROG): main.o $(CLWRAPPER)
+	$(CXX) -o $@ $^ $(OPENCL_LIB)
 
 .PHONY: clean
 clean:
