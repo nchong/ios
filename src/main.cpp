@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
   } else {
     assert(0);
   }
-  cl_kernel k = clw.create_kernel(meta, "meta1");
+  cl_kernel k = clw.create_kernel(meta, is_exclusive ? "meta1_exclusive" : "meta1_inclusive");
   clw.kernel_arg(k, d_in, d_out, d_sum);
   cl_uint dim = 1;
   clw.run_kernel(k, dim, &global_work_size, &local_work_size);
