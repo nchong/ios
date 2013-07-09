@@ -22,6 +22,7 @@ void print_array(TYPE *xs, const char *name, unsigned len) {
 #endif
 
 int main(int argc, char **argv) {
+  std::cout << "sizeof(TYPE) = " << sizeof(TYPE) << std::endl;
 
   // command line arguments
   if (argc != 4) {
