@@ -21,7 +21,6 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 
 #define TYPE unsigned long long
 #define OPERATOR(X, Y) ((X == IDENTITY) ? Y : ((Y ==  IDENTITY) ? X : ((X == TOP) | (Y == TOP) | (GET_UPPER(X) != GET_LOWER(Y)) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
-#endif
 
 #else
 
