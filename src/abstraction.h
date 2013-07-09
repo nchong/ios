@@ -19,7 +19,7 @@ DECLARE_UF_BINARY(CIRC, int, int, int);
 // Top is identified by bad interval (2, 0)
 #define TOP MAKE_PAIR(2, 0)
 
-#define TYPE unsigned long long
+#define TYPE unsigned long
 #define OPERATOR(X, Y) ((X == IDENTITY) ? Y : ((Y ==  IDENTITY) ? X : ((X == TOP) | (Y == TOP) | (GET_UPPER(X) != GET_LOWER(Y)) ? TOP : MAKE_PAIR(GET_LOWER(X), GET_UPPER(Y)))))
 
 #else
