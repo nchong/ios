@@ -6,7 +6,7 @@
 
 __kernel void init_abstract(__global TYPE *input) {
   unsigned i = get_global_id(0);  
-  input[i] = MAKE_PAIR(i, i+1);
+  input[i] = (TYPE) MAKE_PAIR(i, i+1);
 }
 
 __kernel void check_abstract_inclusive(__global TYPE *output, __global unsigned *error) {
